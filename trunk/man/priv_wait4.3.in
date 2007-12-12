@@ -1,0 +1,68 @@
+.\"
+.\" Copyright © 2002  Networks Associates Technology, Inc.
+.\" Copyright © 2007  Douglas Kilpatrick
+.\" Licensed two-clause BSD
+.\"
+.\" Process this file with
+.\" groff -man -Tascii $Name:  $
+.\"
+.\" $Id: priv_wait4.3.in,v 1.4 2003/03/08 06:02:58 dougk Exp $
+.\"
+.TH PRIV_WAIT4 3 "DECEMBER 2007" Unix "Subroutines"
+.SH NAME
+priv_wait4 - wait for process termination
+.SH SYNOPSIS
+.B #include <sys/resource.h>
+.br
+.B #include <privman.h>
+.sp
+.BI "int priv_wait4(pid_t " pid ", int *" status ", int " options ", struct rusage *" ruseage ");"
+.SH DESCRIPTION
+The 
+.B wait4
+function suspends execution of the current process until a child as specified
+by the
+.I pid
+argument has exited, or until a signal is delivered whose action is to
+terminate the current process or to call a signal handling function.
+See 
+.BR wait4 (2)
+for more details, as this method parallels that one.
+
+This method is only needed, or useful, for getting the return value of
+processes created by
+
+.BR priv_rerunas (3)
+with the PRIV_RR_OLD_SLAVE_MONITORED flag set.
+The actual wait4 call happens in the Privman server.
+
+.SH "RETURN VALUE"
+On success, the process ID of the child which exited is returned.
+-1 is returned in the case of failure, with
+.I errno
+set appropriately.
+.SH ERRORS
+See
+.BR wait4 (2)
+for more detail.
+
+.SH BUGS
+priv_wait4 only works for processes that are created by priv_rerunas with
+the PRIV_RR_OLD_SLAVE_MONITORED flag set,
+which seems a silly reason for another method.
+.SH AUTHOR
+Douglas Kilpatrick, originally written while at Network Associates.
+Send email to <privman@rapidscaling.com>
+.SH "SEE ALSO"
+.BR priv_daemon (3)
+.BR priv_execve (3)
+.BR priv_fopen (3)
+.BR priv_popen (3)
+.BR priv_fork (3)
+.BR priv_init (3)
+.BR privman_conf (5)
+.BR priv_open (3)
+.BR priv_pam (3)
+.BR priv_rerunas (3)
+.BR priv_respawn_as (3)
+.BR privman (7)

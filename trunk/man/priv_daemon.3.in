@@ -1,0 +1,66 @@
+.\" Copyright © 2002  Networks Associates Technology, Inc.
+.\" Copyright © 2007  Douglas Kilpatrick
+.\" Licensed two-clause BSD
+.\"
+.\" Process this file with
+.\" groff -man -Tascii $Name:  $
+.\"
+.\" $Id: priv_daemon.3.in,v 1.3 2002/09/17 04:58:17 dougk Exp $
+.\"
+.TH PRIV_DAEMON 3 "DECEMBER 2007" Unix "Subroutines"
+.SH NAME
+priv_daemon - detach from the controlling terminal
+.SH SYNOPSIS
+.B #include <privman.h>
+.HP
+.BI "int priv_daemon(int " nochdir ", int " noclose ");"
+.SH DESCRIPTION
+.B priv_daemon
+causes the process to detach from the controlling terminal, and run in the
+background as system daemons.  A Privman managed program should call this
+in place of calling the 
+.B daemon
+subroutine.
+
+The arguments 
+.IR nochdir " and " noclose
+have the same meaning here as in the normal daemon method.  See 
+.BR daemon (3)
+for more details.
+
+As a (hopefully) irrelevant detail, normally 
+.B daemon
+forks, and the child continues running while the original process
+exits.  Since
+.BR priv_init (3)
+already forked, 
+.B priv_daemon
+causes the privilege server to detach from the controlling terminal
+instead.
+
+.SH FILES
+.I @sysconfdir@/@PACKAGE@.d/ appname
+.RS
+The application's configuration file.  See 
+.BR privman_conf (5)
+for more details. 
+.B priv_daemon
+requires that the configuration allow the fork permission.
+.RE
+.SH BUGS
+priv_fdreopen() has not yet been implemented, and might be needed to 
+properly manage some of the cases.
+.SH AUTHOR
+Douglas Kilpatrick, originally written while at Network Associates.
+Send email to <privman@rapidscaling.com>
+.SH "SEE ALSO"
+.BR priv_bind (3)
+.BR priv_execve (3)
+.BR priv_fopen (3)
+.BR priv_fork (3)
+.BR priv_init (3)
+.BR privman_conf (5)
+.BR priv_open (3)
+.BR priv_pam (3)
+.BR priv_rerunas (3)
+.BR privman (7)

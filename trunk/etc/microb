@@ -1,0 +1,28 @@
+# config for the microbenchmark.  Rather permissive as it 
+# has to test quite a bit.
+
+auth true
+
+open_ro { 
+	/etc/passwd
+}
+
+open_rw {
+	/var/run/microb
+}
+
+open_ao {
+	/var/log/microb.1
+}
+
+bind {
+	1234
+}
+
+runas {
+	*
+}
+allow_rerun true
+
+fork true
+

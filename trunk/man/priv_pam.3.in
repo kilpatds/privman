@@ -1,0 +1,94 @@
+.\" Copyright © 2002  Networks Associates Technology, Inc.
+.\" Copyright © 2007  Douglas Kilpatrick
+.\" Licensed two-clause BSD
+.\"
+.\" Process this file with
+.\" groff -man -Tascii $Name:  $
+.\"
+.\" $Id: priv_pam.3.in,v 1.4 2002/09/19 20:05:05 dougk Exp $
+.\"
+.TH PRIV_PAM 3 "DECEMBER 2007" Unix "Subroutines"
+.SH NAME
+priv_pam_start, priv_pam_end, priv_pam_* - activating Linux-PAM
+.SH SYNOPSIS
+.B #include <privman.h>
+.sp
+.BI "int priv_pam_start(const char *" service ", const char * " user ", const struct pam_conv *" conv ", pam_handle_t **" pamh_p ");"
+.br
+.BI "int priv_pam_end(pam_handle_t *" pamh ", int " pam_status ");"
+.br
+.BI "int priv_pam_authenticate(pam_handle_t *" pamh ", int " flags ");"
+.br
+.BI "int priv_pam_open_session(pam_handle_t *" pamh ", int " flags ");"
+.br
+.BI "int priv_pam_close_session(pam_handle_t *" pamh ", int " flags ");"
+.br
+.BI "int priv_pam_acct_mgmt(pam_handle_t *" pamh ", int " flags ");"
+.br
+.BI "int priv_pam_setcred(pam_handle_t *" pamh ", int " flags ");"
+.br
+.BI "int priv_pam_chauthtok(pam_handle_t *" pamh ", int " flags ");"
+.sp
+.BI "int priv_pam_set_item(pam_handle_t *" pamh ", int " item_type ", const void *" item ");"
+.br
+.BI "int priv_pam_get_item(pam_handle_t *" pamh ", int " item_type ", const void **" item ");"
+.sp
+.BI "int priv_pam_putenv(pam_handle_t *" pamh ", const char *" name_value ");"
+.br
+.BI "int priv_pam_getenv(pam_handle_t *" pamh ", const char *" name");"
+.br
+.BI "int priv_pam_fail_delay(pam_handle_t *" pamh ", unsigned int " usec ");"
+
+.SH DESCRIPTION
+The
+.B priv_pam
+methods parallel the
+.B PAM
+methods.  See the documentation for
+.B PAM
+for more details.
+
+In general, all the methods are proxied, and actually run in the 
+context of the
+.B Privman
+process.  If the provided 
+.I conv
+function is run, it will be run in the context of the unprivileged
+process.
+
+.SH FILES
+.I @sysconfdir@/@PACKAGE@.d/ appname
+.RS
+The application's configuration file.  See
+.BR privman_conf(5)
+for more details.  For an application to use the 
+.B priv_pam
+methods, the "auth" configuration statement must be true, and priv_init
+must have been run with root privilege.
+.RE
+.SH BUGS
+.B priv_pam_getenv
+and
+.B priv_pam_setenv
+are not currently implemented, and may have the wrong prototype.
+.SH TODO
+.RB "Implement " priv_pam_getenv " and " priv_pam_setenv "."
+.SH AUTHOR
+Douglas Kilpatrick, originally written while at Network Associates.
+Send email to <privman@rapidscaling.com>
+.SH "SEE ALSO"
+.BR priv_bind (3)
+.BR priv_daemon (3)
+.BR priv_execve (3)
+.BR priv_fopen (3)
+.BR priv_fork (3)
+.BR priv_init (3)
+.BR privman_conf (5)
+.BR priv_open (3)
+.BR priv_rerunas (3)
+.BR privman (7)
+
+Also see the "check_user" sample program provided with the
+.B Privman
+distribution for a minimal example of authentication via
+.B PAM.

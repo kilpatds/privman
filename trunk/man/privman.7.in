@@ -1,0 +1,85 @@
+.\" Copyright © 2002  Networks Associates Technology, Inc.
+.\" Copyright © 2007  Douglas Kilpatrick
+.\" Licensed two-clause BSD
+.\"
+.\" Process this file with
+.\" groff -man -Tascii $Name:  $
+.\"
+.\" $Id: privman.7.in,v 1.2 2002/09/14 06:57:50 dougk Exp $
+.\"
+.TH PRIVMAN 7 "DECEMBER 2007" Unix "Miscellaneous"
+.SH NAME
+Privman \- A library for privilege separation.
+.SH DESCRIPTION
+.B Privman
+is a library that makes it easy for programs to use privilege
+separation, a technique that prevents the leak or misuse of privilege
+from applications that must run with some elevated permissions.
+Privman-managed processes can implement fine grained control of root
+privilege on common Unix-based operating systems.
+
+Applications that use the Privman library split into two halves, the half
+that performs valid privileged operations, and the half that contains the
+application's logic. The Privman library simplifies the otherwise complex
+task of separating the applications, protecting the system from compromise
+if an error in the applications logic is found. 
+
+The library uses configuration files (
+.BR privman_conf (5)
+) to allow fine-grained access control decisions for the privileged
+operations, limiting exposure in the event of an attack against the
+application. If the applications is compromised, the attacker gains
+only the privileges of an unprivileged user, and the specific privileges
+granted to the application by the application's Privman configuration file.
+.SH FILES
+.I @sysconfdir@/@PACKAGE@.d/*
+.RS
+Applications specific configuration files. See
+.BR privman_conf (5)
+for further details.
+.RE
+
+.I @includedir@/privman.h
+.RS
+The include file for the library.
+.RE
+
+.I @libdir@/libprivman.so
+.RS
+The library itself. On most systems, you will need to link against
+libpam and libpam_misc in addition to libprivman
+.RE
+.SH OVERVIEW
+A Privman managed program will generally start with a call to
+.BR priv_init (3).
+priv_init() splits the process: the still-privileged parent listens to a
+pipe for requests, the child drops privilege and and returns from
+priv_init().
+
+After priv_init(), continue normally. When you need to invoke privileged
+operation "foo()", use "priv_foo()" instead. For example, if you want your
+server to bind to a low port, you would pass the socket to
+.BR priv_bind (3)
+instead of bind(2).
+.SH BUGS
+The API may seem a bit complex.
+
+There is no permission checking on the chroot jail for either execve or
+rerunas.
+.SH TODO
+priv_fdreopen().
+.SH AUTHOR
+Douglas Kilpatrick, originally written while at Network Associates.
+Send email to <privman@rapidscaling.com>
+.SH "SEE ALSO"
+.BR priv_bind (3)
+.BR priv_daemon (3)
+.BR priv_execve (3)
+.BR priv_fopen (3)
+.BR priv_fork (3)
+.BR priv_init (3)
+.BR privman_conf (5)
+.BR priv_open (3)
+.BR priv_pam (3)
+.BR priv_rerunas (3)
+

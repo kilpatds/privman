@@ -1,0 +1,155 @@
+.\" Copyright © 2002  Networks Associates Technology, Inc.
+.\" Copyright © 2007  Douglas Kilpatrick
+.\" Licensed two-clause BSD
+.\"
+.\" Process this file with
+.\" groff -man -Tascii $Name:  $
+.\"
+.\" $Id: priv_rerunas.3.in,v 1.10 2002/11/12 04:52:52 dougk Exp $
+.\"
+.TH PRIV_RERUNAS 3 "DECEMBER 2007" Unix "Subroutines"
+.SH NAME
+priv_rerunas - rerun the program as specified user, possibly in a chroot jail.
+.SH SYNOPSIS
+.B #include <privman.h>
+.HP
+.BI "int priv_rerunas(void (*" fnptr ")(char * const *), char * const " arg "[], const char *" user ", const char *" chroot ", int " flags ");"
+.SH DESCRIPTION
+This method,
+.B priv_rerunas
+causes the application to run again, falling out of
+.B priv_init
+with the original state intact.
+Only one of the two Privman client processes will continue to be able to talk
+to the Privman server.
+The function pointed to by 
+.I fnptr
+will be called with NULL-terminated the string array argument provided in 
+.I arg
+before the application returns from priv_init, allowing you to change global
+state as required.  The application will be running as
+.I user
+in the chroot jail 
+.IR chroot .
+
+Which process can still talk to the Privman server is controlled by the
+.I flags
+passed in.  Pass in 
+.B PRIV_RR_OLD_SLAVE_MONITORED
+if you want the caller to continue to be able to talk to the Privman server,
+or 0 if you want the new process to continue to talk to the Privman server.
+
+You can pass
+.B NULL
+.RI "for the " user " and the " chroot
+argmuments, in which case no chroot jail will be used, and the user will
+be the default unprivileged user.
+
+As an example, the following program counts from one to 10.
+
+.RS
+#include "privman.h"
+.br
+#include <unistd.h>
+.br
+#include <stdlib.h>
+.br
+#include <string.h>
+
+int state = 1;
+
+void rerun_fn(const char *args) {
+.in +.5i
+state = atoi(args);
+.in -.5i
+.br
+}
+
+int main(void) {
+.in +.5i
+priv_init("myrerun");
+
+printf("%d ");
+.br
+if (state < 10) {
+.in +.5i
+char **arg;
+.br
+arg = (char**)malloc(sizeof(char*) * 2);
+.br
+arg[0] = malloc(5);
+.br
+arg[1] = NULL;
+.br
+snprintf(arg, sizeof(arg)-1, "%d", state + 1);
+
+priv_rerunas(rerun_fn, arg, NULL, NULL, 0);
+.br
+_exit(0);
+.in -.5i
+}
+.br
+printf("\\n");
+.in -.5i
+.br
+}
+.RE
+
+.B priv_rerunas
+requires that
+.I allow_rerun
+be set to true in the application's configuration file.  If the application
+needs to use either the 
+.I user
+or
+.I chroot
+options, then 
+.I runas_user 
+and 
+.I chroot
+will also have to be set properly in the application's configuration file.
+See 
+.BR privman_conf (3)
+for more detail.
+
+.SH "RETURN VALUE"
+.B priv_rerunas
+returns 0 on success, or -1 on failure.  If it fails, errno will be set
+to an appropriate value, most likely
+.BR EPERM .
+
+If the PRIV_RR_OLD_SLAVE_MONITORED flag is used, then 
+.B priv_rerunas
+will return the pid of the created process on success.  You can get the
+exit value of that process by using 
+.BR priv_wait4 (3).
+
+.SH FILES
+.IR @sysconfdir@/@PACKAGE@.d/ appname
+.RS
+The application's configuration file.  See
+.BR privman_conf (5)
+for more details.
+
+.SH BUGS
+This is not the simpliest primitive to understand.  It might
+be nice if program execution could continue from the point of invocation
+rather than having to restart at priv_init().
+
+It might be useful to be able to pass file descriptors.
+.SH AUTHOR
+Douglas Kilpatrick, originally written while at Network Associates.
+Send email to <privman@rapidscaling.com>
+.SH "SEE ALSO"
+.BR priv_bind (3)
+.BR priv_daemon (3)
+.BR priv_execve (3)
+.BR priv_fopen (3)
+.BR priv_fork (3)
+.BR priv_wait4 (3)
+.BR priv_init (3)
+.BR privman_conf (5)
+.BR priv_open (3)
+.BR priv_pam (3)
+.BR privman (7)
+.BR priv_respawn_as (3)

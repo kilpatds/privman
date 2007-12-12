@@ -1,0 +1,93 @@
+.\" Copyright © 2002  Networks Associates Technology, Inc.
+.\" Copyright © 2007  Douglas Kilpatrick
+.\" Licensed two-clause BSD
+.\"
+.\" Process this file with
+.\" groff -man -Tascii $Name:  $
+.\"
+.\" $Id: priv_execve.3.in,v 1.6 2002/10/27 23:27:47 dougk Exp $
+.\"
+.TH PRIV_EXECVE 3 "DECEMBER 2007" Unix "Subroutines"
+.SH NAME
+priv_execve - execute program as a given user and in a given chroot jail
+.SH SYNOPSIS
+.B #include <privman.h>
+.sp
+.BI "int priv_execve(const char *" program ", char * const " argv "[], const * const " envp "[], const char * " user "const char *" chroot ");"
+.SH DESCRIPTION
+.B priv_execve()
+executes the program pointed to by 
+.IR  program .
+
+See 
+.BR execve (2)
+for more details about the 
+.IR program ", " argc ", and " envp
+parameters.
+
+As an important note, the execve will actually occur in a new slave
+process, so changes made to the process context in the local
+process, like limits, will not affect it.  The new program will not have
+any access to the privilege manager, although if the
+.I user
+provided to
+.B priv_execve
+is "root" that little detail won't be relevant.
+
+.I program
+must be in the name-space provided by 
+.I chroot
+as the execve call is made after the chroot call.
+.I chroot
+should be an absolute path.  Setting up a proper chroot jail for the
+process to run is is not simple, as the process must also be able to
+link inside the jail.  If 
+.B NULL
+is passed as 
+.IR chroot ,
+the directory "/" will be used.
+
+.I user
+will be looked up via getpwent, and so should probably be in the password
+file.  The user is looked up before the chroot.  If
+.B NULL
+is passed as 
+.IR user ,
+the user default unprivileged user (normally "nobody") will be used.
+
+.SH FILES
+.I @sysconfdir@/@PACKAGE@.d/ appname
+.RS
+The application's configuration file.  See
+.BR privman_conf (5)
+for more details.  To use 
+.B priv_execve
+, the configuration file will have to set 
+.I allow_rerun
+to a true value.
+
+The configuration file will also need to list any target users in 
+.I run_as user
+statements.
+.RE
+.SH BUGS
+Given the issues in verifying the arguments, then executing, race conditions
+are likely.  The method should fail (causing the program to exit) if the
+environment changes unsuitably rather than give up privilege, but the
+method will be unable to return an error code to the calling process.
+.SH TODO
+Remove this method.
+.SH AUTHOR
+Douglas Kilpatrick, originally written while at Network Associates.
+Send email to <privman@rapidscaling.com>
+.SH "SEE ALSO"
+.BR priv_bind (3)
+.BR priv_daemon (3)
+.BR priv_fopen (3)
+.BR priv_fork (3)
+.BR priv_init (3)
+.BR privman_conf (5)
+.BR priv_open (3)
+.BR priv_pam (3)
+.BR priv_rerunas (3)
+.BR privman (7)

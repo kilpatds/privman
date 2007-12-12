@@ -1,0 +1,65 @@
+.\" Copyright © 2002  Networks Associates Technology, Inc.
+.\" Copyright © 2007  Douglas Kilpatrick
+.\" Licensed two-clause BSD
+.\"
+.\" Process this file with
+.\" groff -man -Tascii $Name:  $
+.\"
+.\" $Id: priv_init.3.in,v 1.3 2002/10/24 20:58:32 dougk Exp $
+.\"
+.TH PRIVMAN 7 "DECEMBER 2007" Unix "Miscellaneous"
+.SH NAME
+priv_init - initialize the Privman library
+.SH SYNOPSIS
+.B #include <privman.h>
+.sp
+.BI "void priv_init(const char *appname);"
+.SH DESCRIPTION
+.B priv_init()
+initializes the Privman libraries.
+.B appname
+is the name of the application.  A configuration file is expected at
+.RB @sysconfdir@/@PACKAGE@.d/ appname
+which describes the allowed privileged requests from the application.
+The
+.B appname
+is also used for syslog messages and the like.
+
+.B priv_init()
+needs to be invoked with raised privilege (super-user rights).
+.SH "RETURN VALUE"
+Upon successful return, the application resumes running as an unprivileged
+user, normally "nobody'. Actually, the application has forked, and the
+child process has returned from priv_init().
+
+The process has changed directory into the root of the chroot jail specified
+by the configuration file.  See 
+.BR privman_conf (5)
+for further details.
+
+
+.SH FILES
+.IB @sysconfdir@/@PACKAGE@.d/ appname
+.RS
+The configuration file that lists the granted privileges for the application.
+See 
+.BR privman_conf (5)
+for more information.
+.RE
+.SH BUGS
+May continue when it should exit.  Might exit when it should continue.
+Isn't very forgiving of errors.
+.SH AUTHOR
+Douglas Kilpatrick, originally written while at Network Associates.
+Send email to <privman@rapidscaling.com>
+.SH "SEE ALSO"
+.BR priv_bind (3)
+.BR priv_daemon (3)
+.BR priv_execve (3)
+.BR priv_fopen (3)
+.BR priv_fork (3)
+.BR privman_conf (5)
+.BR priv_open (3)
+.BR priv_pam (3)
+.BR priv_rerunas (3)
+.BR privman (7)

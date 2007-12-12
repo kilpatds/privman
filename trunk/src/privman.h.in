@@ -1,0 +1,155 @@
+/*
+ * Copyright © 2002  Networks Associates Technology, Inc.
+ * All rights reserved.
+ *
+ *
+ * Privman header file.
+ * Software that uses the privman library should include this header.
+ *
+ * Generally, you will see "priv_foo" as a method analogous to foo, but
+ * implimented by invoking the privman server.
+ *
+ * Start your program by calling "priv_init()"
+ * priv_init() splits the process.  One process will continue with priviledge
+ * as the priviledged server, the other will return from priv_init() as
+ * the unpriviledged client.
+ *
+ * int main(int argc, char *argv[]) {
+ *      privman_init(argv[0]);
+ *      ....
+ *      fd = priv_open("path/to/file",flags,mode);
+ *      ....
+ *      fd = socket();
+ *      priv_bind(fd, addr, addrlen);
+ *      listen(fd, backlog)
+ *      fd = accept(fd);
+ *      ...
+ *
+ * $Id: privman.h.in,v 1.11 2002/10/31 16:11:39 dougk Exp $
+ */
+
+/* autoconf magic. */
+#ifndef HAVE_SECURITY_PAM_APPL_H
+#undef HAVE_SECURITY_PAM_APPL_H
+#endif
+
+#ifndef HAVE_PAM_PAM_APPL_H
+#undef HAVE_PAM_PAM_APPL_H
+#endif
+
+#ifndef SYS_TIME_H
+#undef SYS_TIME_H
+#endif
+
+#ifndef SYS_RESOURCE_H
+#undef SYS_RESOURCE_H
+#endif
+
+#ifndef HAVE_LIBPAM
+#undef HAVE_LIBPAM
+#endif
+/* end autoconf magic. */
+
+#ifndef PRIVMAN_H
+#define PRIVMAN_H 1
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+
+#ifdef SYS_TIME_H
+#include <sys/time.h>
+#endif
+#ifdef SYS_RESOURCE_H
+#include <sys/resource.h>
+#endif
+
+#if   defined(HAVE_SECURITY_PAM_APPL_H)
+#include <security/pam_appl.h>
+#elif defined(HAVE_PAM_PAM_APPL_H)
+#include <pam/pam_appl.h>
+#endif
+
+void    priv_init(const char *appname);
+int     priv_open(const char *pathname, int flags, ...);
+FILE*   priv_fopen(const char *pathname, const char *mode);
+void	priv_exit(int status); /* Causes the Privman monitor to exit */
+int	priv_unlink(const char *pathname);
+int     priv_bind(int sockfd, struct sockaddr *addr, socklen_t addrlen);
+
+#ifdef HAVE_LIBPAM
+int     priv_pam_start(const char *service, const char *user,
+                    const struct pam_conv *conv,
+                    pam_handle_t **pamh_p);
+int     priv_pam_authenticate(pam_handle_t *pamh, int flags);
+
+int     priv_pam_acct_mgmt(pam_handle_t *pamh, int flags);
+
+int     priv_pam_end(pam_handle_t *pamh, int flags);
+
+int     priv_pam_setcred(pam_handle_t *pamh, int flags);
+
+int     priv_pam_open_session(pam_handle_t *pamh, int flags);
+
+int     priv_pam_close_session(pam_handle_t *pamh, int flags);
+
+int     priv_pam_chauthtok(pam_handle_t *pamh, int flags);
+
+int     priv_pam_set_item(pam_handle_t *pamh, int item_type, const void *item);
+
+int     priv_pam_get_item(pam_handle_t *pamh, int item_type, const void **item);
+
+int     priv_pam_putenv(pam_handle_t *pamh, const char *name_value);
+
+int     priv_pam_getenv(pam_handle_t *pamh, const char *name);
+
+int     priv_pam_fail_delay(pam_handle_t *pamh, unsigned int usec);
+#endif /* HAVE_LIBPAM */
+
+pid_t   priv_fork(void);
+
+struct rusage;
+pid_t	priv_wait4(pid_t pid, int *status, int options, struct rusage *rusage);
+
+int     priv_daemon(int nochdir, int noclose);
+
+int     priv_execve(const char *program, char * const argv[],
+                    char * const envp[], const char * user, const char* chroot);
+
+FILE   *priv_popen_as(const char *command, const char *type, const char *user);
+
+int	priv_pclose(FILE *stream);
+
+enum priv_rereunas_flags {
+	PRIV_RR_OLD_SLAVE_MONITORED = 1
+};
+int     priv_rerunas(void (*fnptr)(char * const *), char * const arg[],
+                    const char *user, const char *chroot, int flags);
+
+int     priv_respawn_as(void (*fnptr)(char * const *), char * const arg[],
+                    const char *user, const char *chroot);
+
+/*
+ * Extension framework.  Call the register functions before you call
+ * priv_init().
+ */
+
+
+/* Returns a handle.  Use it for the invoke call.			*/
+int	priv_register_info_fn(char *(*fnptr)(char * const *));
+int	priv_register_cap_fn (int   (*fnptr)(char * const *));
+
+/* Invokes registered methods in the context of the Privman server	*/
+/* the return value is malloced, and needs to be freed.			*/
+char   *priv_invoke_info_fn(int handle, char * const args[]);
+int	priv_invoke_cap_fn (int handle, char * const args[]);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

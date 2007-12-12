@@ -1,0 +1,10 @@
+# Copyright © 2002  Networks Associates Technology, Inc.
+# All rights reserved.
+#
+# This app is allowed to rerun as any non-root user.  These permissions are
+# needed for for priv_popen_as
+
+runas {
+	*
+}
+allow_rerun true

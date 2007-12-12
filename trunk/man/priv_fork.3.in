@@ -1,0 +1,55 @@
+.\" Copyright © 2002  Networks Associates Technology, Inc.
+.\" Copyright © 2007  Douglas Kilpatrick
+.\" Licensed two-clause BSD
+.\" All rights reserved.
+.\"
+.\" Process this file with
+.\" groff -man -Tascii $Name:  $
+.\"
+.\" $Id: priv_fork.3.in,v 1.4 2002/09/19 20:05:05 dougk Exp $
+.\"
+.TH PRIV_FORK 3 "DECEMBER 2007" Unix "Subroutines"
+.SH NAME
+priv_fork - create a child Privman managed process
+.SH SYNOPSIS
+.B #include <privman.h>
+.sp
+.B "pid_t priv_fork(void);"
+.SH DESCRIPTION
+.B priv_fork
+creates both a child process, and a child Privman manager process,
+and connects them together.  The child process of the calling process
+will actually be the child of the calling process.  The new Privman
+manager process will be a child of the old Privman manager.
+
+The managed process can, of course, call regular fork() at any time.
+If it does, the child process will inherit the pipe to the Privman
+manager process.  This will not allow the child to cause the manager
+process to grant unauthorized privilege, but may cause it to become
+highly confused.
+.SH FILES
+.I @sysconfdir@/@PACKAGE@.d/ appname
+.RS
+The application's configuration file.  See
+.BR privman_conf (5)
+for more details.  The configuration file will have to set the
+.I fork
+statement to true for this call to succeed.
+.RE
+.SH BUGS
+There are probably races in error handing, but they should not be 
+exploitable.  They may make proper error handling impossible.
+.SH AUTHOR
+Douglas Kilpatrick, originally written while at Network Associates.
+Send email to <privman@rapidscaling.com>
+.SH "SEE ALSO"
+.BR priv_bind (3)
+.BR priv_daemon (3)
+.BR priv_execve (3)
+.BR priv_fopen (3)
+.BR priv_init (3)
+.BR privman_conf (5)
+.BR priv_open (3)
+.BR priv_pam (3)
+.BR priv_rerunas (3)
+.BR privman (7)

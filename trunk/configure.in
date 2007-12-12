@@ -1,0 +1,71 @@
+dnl Copyright © 2002  Networks Associates Technology, Inc.
+dnl All rights reserved.
+dnl
+dnl configure.in
+dnl autoconf source file.  Specifies the build requirements of the
+dnl package.
+dnl Process this file with autoconf to produce a configure script.
+dnl
+dnl $Id: configure.in,v 1.29 2004/05/30 21:19:50 kilpatds Exp $
+AC_INIT(src/msghdr.c)
+AC_CONFIG_AUX_DIR(config)
+dnl init automake (makes makefiles)
+AM_INIT_AUTOMAKE(privman, 0.9.3)
+
+dnl Checks for programs.
+AC_PROG_CC
+AC_PROG_CXX
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_YACC
+AM_PROG_LEX
+AM_PROG_LIBTOOL
+
+dnl Checks for libraries.
+AC_SEARCH_LIBS(dlopen, dl)
+AC_CHECK_LIB(pam, pam_start)
+AC_SEARCH_LIBS(misc_conv, pam_misc, [
+	CHECK_USER=check_user
+	AC_SUBST(CHECK_USER)], , -lpam)
+AC_SEARCH_LIBS(getservbyname, socket)
+dnl AC_CHECK_LIB(stdc++, set_new_handler)
+
+dnl Checks for header files.
+AC_HEADER_STDC
+AC_HEADER_SYS_WAIT
+
+AC_CHECK_HEADERS(assert.h errno.h fcntl.h limits.h netinet/in.h pwd.h \
+		security/pam_appl.h stdarg.h stdio.h stdlib.h string.h \
+		sys/param.h sys/socket.h sys/types.h sys/uio.h sys/wait.h \
+		unistd.h pam/pam_appl.h pam/pam_misc.h security/pam_misc.h \
+		arpa/inet.h netinet/in.h strings.h sys/resource.h sys/time.h \
+		signal.h)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_TYPE_PID_T
+AC_TYPE_SIZE_T
+AC_TYPE_SOCKLEN_T
+
+dnl Local checks for types and defines.  acinclude.in
+LO_CHECK_CMSGHDR
+LO_CHECK_CMSG_LEN
+LO_CHECK_PAM_FAIL_DELAY
+LO_DEF_AF_LOCAL
+LO_DEF_LOG_AUTHPRIV
+LO_PAM_CONST_CONV_FUNC
+LO_PAM_CONST_GET_ITEM
+
+AC_CHECK_FUNCS(getcwd strdup socket strtol waitpid setuid memcpy)
+
+dnl automake changes this to AM_FOO
+AM_CONFIG_HEADER(config.h src/privman.h)
+AC_OUTPUT(								\
+	Makefile config/Makefile src/Makefile tests/Makefile		\
+	etc/Makefile man/Makefile					\
+	man/privman.7 man/privman_conf.5 				\
+	man/priv_bind.3 man/priv_daemon.3 man/priv_execve.3		\
+	man/priv_fopen.3 man/priv_fork.3 man/priv_init.3		\
+	man/priv_open.3 man/priv_pam.3 man/priv_rerunas.3		\
+	man/priv_popen.3 man/priv_wait4.3 man/priv_respawn_as.3		\
+	man/priv_custom.3)

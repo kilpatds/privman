@@ -1,0 +1,41 @@
+PRIVMAN:  A simple privilege separation library.
+
+To build:
+	./configure
+	make
+	make install
+
+It should compile cleanly, modulo a couple of warnings from the YACC template
+code.  If it fails, please let us know.
+
+The directories here are:
+
+clients		Applications that have been adapted for privilege management
+		(i.e., clients of the PRIVMAN server).
+
+docs		Papers, documentation.
+
+etc		Sample configuration files for managed servers.  Used for
+		the tests.
+
+man		Man pages for the various PRIVMAN library calls.
+
+src		The source to the PRIVMAN library/server.
+
+tests		Simple test programs to demonstrate the use of the library,
+		and to test the functionality.
+
+
+Platform notes:
+
+Solaris:
+	For some reason, apparently involving shared libraries and C++
+constructors, Privman doesn't work as a shared library on the version of
+Solaris I was able to test on.  Use "./configure --disable-shared".  Also
+the "check_user" test won't build since Solaris's PAM implementation
+does not provide the misc_conv utility function to ask for passwords.
+
+OS X:
+	Similar to solaris, I had problems getting shared libraries to
+work.  The symptom is the program hanging when it attempts to run the
+first method from the shared library.

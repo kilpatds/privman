@@ -1,0 +1,18 @@
+	Pam)
+		pam_putenv()
+		pam_getenv()
+		pam_getenvlist()
+
+	update other client programs)
+
+	priv_freopen() (eek?)
+
+	priv_getpwent() and family?
+
+	Better support for setuid non-root programs
+
+	Improve output on startup error (can't finish priv_init)
+		no run_as (enforce)
+		unpriv_user (enforce at config read time)
+
+	Error on invalid config
