@@ -1,0 +1,14 @@
+# Copyright © 2002  Networks Associates Technology, Inc.
+# All rights reserved.
+#
+# This app checks pam authentication stuff.  It needs
+# access to PAM.  We also test rerunas things to verify the "allow rerun
+# of authenticated users" bit works.
+
+auth true
+
+# runas { }
+
+allow_rerun true
+auth_allow_rerun true
+

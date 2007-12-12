@@ -1,0 +1,183 @@
+.\"
+.\" Copyright © 2002  Networks Associates Technology, Inc.
+.\" Copyright © 2007  Douglas Kilpatrick
+.\" Licensed two-clause BSD
+.\"
+.\" Process this file with
+.\" groff -man -Tascii $Name:  $
+.\"
+.\" $Id: privman_conf.5.in,v 1.10 2003/03/08 05:41:46 dougk Exp $
+.\"
+.TH PRIVMAN_CONF 5 "DECEMBER 2007" Unix "File Formats"
+.SH NAME
+privman_conf - configuration file format for Privman managed applications
+.SH SYNOPSIS
+.BI @sysconfdir@/@PACKAGE@.d/ appname
+.SH DESCRIPTION
+Each application has its own configuration file in @sysconfdir@/@PACKAGE@.d
+that described the privileges that the application has. The default behavior
+is to deny all requests: only by adding privileges to the file will any
+requests be permitted.
+
+As is normal for Unix configuration files, comments start from the 
+.B #
+character to the end of the line. Whitespace can be liberally used, the
+file format depends on the grammar for structure, not whitespace.
+
+There are currently ten different privilege types.
+
+.I open_ro {
+.in +.5i
+.I	/path/to/file
+.sp 0
+.I	/path/to/directory/*
+.sp 0
+.in -.5i
+.I }
+.RS
+Lists files that the application can open read-only.  Currently the path
+elements are not allowed to contain whitespace, or the character '*'.  If
+a path ends with a '*' as the final path element, then any file in that
+directory can be opened.
+.RE
+
+.I open_rw { }
+.RS
+Lists files that the application can open read-write.  See open_ro for more
+detail.
+.RE
+
+.I open_ao { }
+.RS
+Lists files that the application can open append-only.  See open_ro for more
+detail.
+.RE
+
+.I unlink { }
+.RS
+Lists files that the application can unlink (delete).  See open_ro for more
+detail.
+.RE
+
+.I bind {
+.in +.5i
+.I 80
+.sp 0
+.in -.5i
+.I }
+.RS
+List any privileged port the application needs to bind to here.  If you only
+need one port, you can dispense with the curly braces.  Ports can be
+specified numerically, or by name.  If specified by name, the port
+will be converted to a number by gethostbyname().
+The wildcard character '*' is accepted as a port, in which case the
+application will be permitted to bind to any port.
+.RE
+
+.I run_as {
+.in +.5i
+.I user
+.sp
+.in -.5i
+.I }
+.RS
+The application can invoke priv_execve or priv_rerunas as the specified
+users.  To allow the application to change to any non-root user, use the
+wildcard character '*'.  To also allow the application to change to a
+root user, specifically mention the root user in the user list.
+
+It is an error for an application not running with root privileges
+to have a run_as section, as the application will be unable to
+support the operation.
+.RE
+
+.I chroot /path/to/jail
+.RS
+The chroot jail the unprivileged portion of the program runs in after
+priv_init.  This option defaults to
+.IR / .
+.RE
+
+.I unpriv_user nobody
+.RS
+The unprivileged user the program runs as after priv_init.  This user is
+also the default user for priv_rerunas and priv_execve.  This option
+defaults to 
+.IR nobody .
+
+It is an error for an application not running with root privileges
+to have a unpriv_user derective.  Instead, the assumption is that
+the euid and ruid differ, and the unpriv user will be the ruid.
+.RE
+
+.I auth (true|false)
+.RS
+Determines whether the application is allowed to use PAM authentication.
+This will not, by itself, allow the application to change user ID. It
+merely allows the application to invoke PAM to authenticate the user.
+This option defaults to
+.IR false .
+
+It is an error for an application not running with root privileges
+to have an auth derective, as the application will be unable to
+support the operation.
+.RE
+
+.I auth_allow_rerun (true|false)
+.RS
+If this is set to true, and user that successfully authenticates via PAM
+authentication will be added to the run_as list for this execution of
+the program.  Using this primitive allows you to keep the run_as list much
+shorter, possibly empty.  This option defaults to
+.IR false.
+.RE
+
+.I fork (true|false)
+.RS
+The application is allowed to use priv_fork() or priv_daemon().  See
+.BR priv_fork (3)
+or 
+.BR priv_daemon (3)
+for more detail.  This option defaults to
+.IR false .
+.RE
+
+.I allow_rerun (true|false)
+.RS
+The application is allowed to use priv_rerunas() and priv_respawn_as().  See
+.BR priv_rerunas (3)
+for more detail.  This option defaults to
+.IR false .
+.RE
+
+.SH BUGS
+The mapping between the configuration file and the policy as enforced by
+the Privman server process may not be exact.  In particular, a user
+might want to enforce (program,user,chroot) tuples, but the configuration
+file provides no way to do this.
+
+The characters allowed in path lists are a distinct subset from the characters
+allowed in general unix paths.  In particular, white space is not allowed
+in the path lists.
+
+There is no permission checking on the chroot jail for either execve or
+rerunas.
+
+The permission allowed by fork is not clear.
+.SH AUTHOR
+Douglas Kilpatrick, originally written while at Network Associates.
+Send email to <privman@rapidscaling.com>
+.SH "SEE ALSO"
+.BR priv_bind (3)
+.BR priv_daemon (3)
+.BR priv_execve (3)
+.BR priv_fopen (3)
+.BR priv_fork (3)
+.BR priv_wait4 (3)
+.BR priv_init (3)
+.BR priv_open (3)
+.BR priv_pam (3)
+.BR priv_popen (3)
+.BR priv_rerunas (3)
+.BR priv_respawn_as (3)
+.BR privman (7)

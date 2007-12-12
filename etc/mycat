@@ -1,0 +1,19 @@
+# Copyright © 2002  Networks Associates Technology, Inc.
+# All rights reserved.
+#
+# This program cats out semi-protected files.  THis configuration is
+# used by "mycat" and "mycat2"
+open_ro {
+	/etc/passwd
+	# Anything under /var
+	/var/*
+	# OS X /var
+	/private/var/*
+}
+# No write permission
+open_rw { }
+# No append-only permission
+open_ao { } 
+
+# mycat has an extranious fork to test the priv_fork functionality
+fork true

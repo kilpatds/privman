@@ -1,0 +1,88 @@
+.\" Copyright © 2002  Networks Associates Technology, Inc.
+.\" Copyright © 2007  Douglas Kilpatrick
+.\" Licensed two-clause BSD
+.\"
+.\" Process this file with
+.\" groff -man -Tascii $Name:  $
+.\"
+.\" $Id: priv_respawn_as.3.in,v 1.3 2003/03/07 23:10:04 dougk Exp $
+.\"
+.TH PRIV_RESPAWN_AS 3 "DECEMBER 2007" Unix "Subroutines"
+.SH NAME
+priv_respawn_as - spawn a new instance of the process as the specified user, possibly in a chroot jail.
+.SH SYNOPSIS
+.B #include <privman.h>
+.HP
+.BI "int priv_respawn_as(void (*" fnptr ")(char * const *), char * const " arg "[], const char *" user ", const char *" chroot ");"
+.SH DESCRIPTION
+This method,
+.B priv_respawn_as
+causes the application to run again, falling out of
+.B priv_init
+with the original state intact.  The current process will continue unaffected.
+The function pointed to by 
+.I fnptr
+will be called with NULL-terminated the string array argument provided in 
+.I arg
+before the application returns from priv_init, allowing you to change global
+state as required.  The application will be running as
+.I user
+in the chroot jail 
+.IR chroot .
+You can pass
+.B NULL
+.RI "for the " user " and the " chroot
+argmuments, in which case no chroot jail will be used, and the user will
+be the default unprivileged user.
+
+Unlike 
+.BR priv_rerunas (3)
+both slave processes will be able to use a Privman server.  See 
+.BR priv_rerunas (3)
+for more details and examples.
+
+.B priv_respawn_as
+requires that
+.I allow_rerun
+be set to true in the application's configuration file.  If the application
+needs to use either the 
+.I user
+or
+.I chroot
+options, then 
+.I runas_user 
+and 
+.I chroot
+will also have to be set properly in the application's configuration file.
+See 
+.BR privman_conf (3)
+for more detail.
+.SH FILES
+.IR @sysconfdir@/@PACKAGE@.d/ appname
+.RS
+The application's configuration file.  See
+.BR privman_conf (5)
+for more details.
+
+.SH BUGS
+This is not the simpliest primitive to understand.  It might
+be nice if program execution could continue from the point of invocation
+rather than having to restart at priv_init().
+
+It might be useful to be able to pass file descriptors.
+.SH AUTHOR
+Douglas Kilpatrick, originally written while at Network Associates.
+Send email to <privman@rapidscaling.com>
+.SH "SEE ALSO"
+.BR priv_bind (3)
+.BR priv_daemon (3)
+.BR priv_execve (3)
+.BR priv_fopen (3)
+.BR priv_fork (3)
+.BR priv_wait4 (3)
+.BR priv_init (3)
+.BR privman_conf (5)
+.BR priv_open (3)
+.BR priv_popen (3)
+.BR priv_pam (3)
+.BR privman (7)

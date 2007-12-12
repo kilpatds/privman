@@ -1,0 +1,60 @@
+.\" Copyright © 2002  Networks Associates Technology, Inc.
+.\" Copyright © 2007  Douglas Kilpatrick
+.\" Licensed two-clause BSD
+.\"
+.\" Process this file with
+.\" groff -man -Tascii $Name:  $
+.\"
+.\" $Id: priv_open.3.in,v 1.4 2002/09/19 20:05:05 dougk Exp $
+.\"
+.TH PRIV_OPEN 3 "DECEMBER 2007" Unix "Subroutines"
+.SH NAME
+priv_open - open and possibly create a privileged file
+.SH SYNOPSIS
+.B #include <privman.h>
+.sp
+.BI "int priv_open(const char *" pathname ", int " flags ");"
+.sp 0
+.BI "int priv_open(const char *" pathname ", int " flags ", mode_t " mode ");"
+.SH DESCRIPTION
+.B priv_open
+is equivalent to the 
+.BR open (2)
+syscall.  It converts a pathname into a file descriptor that can be used
+with
+.BR read ", " write ", and other such calls."
+.B priv_open
+takes the same flags as open(2).
+
+.B priv_open
+will only succeed if the configuration file for the application allows the
+access.
+.SH "RETURN VALUE"
+.B priv_open
+returns the new file descriptor, or -1 if an error occurred (in which case,
+.I errno
+is set appropriately).  See
+.BR open (2)
+for more details, as this method parallels it.
+.SH FILES
+.IR @sysconfdir@/@PACKAGE@.d/ appname
+.RS
+The application's configuration file.  See
+.BR privman_conf (5)
+.RE
+.SH BUGS
+File creation may be possible without granting RW or AO access to the file.
+.SH AUTHOR
+Douglas Kilpatrick, originally written while at Network Associates.
+Send email to <privman@rapidscaling.com>
+.SH "SEE ALSO"
+.BR priv_bind (3)
+.BR priv_daemon (3)
+.BR priv_execve (3)
+.BR priv_fopen (3)
+.BR priv_fork (3)
+.BR priv_init (3)
+.BR privman_conf (5)
+.BR priv_pam (3)
+.BR priv_rerunas (3)
+.BR privman (7)

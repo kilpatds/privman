@@ -1,0 +1,67 @@
+.\"
+.\" Copyright © 2002  Networks Associates Technology, Inc.
+.\" Copyright © 2007  Douglas Kilpatrick
+.\" Licensed two-clause BSD
+.\"
+.\" Process this file with
+.\" groff -man -Tascii $Name:  $
+.\"
+.\" $Id: priv_bind.3.in,v 1.5 2002/10/29 16:57:01 dougk Exp $
+.\"
+.TH PRIV_BIND 3 "DECEMBER 2007" Unix "Subroutines"
+.SH NAME
+priv_bind - bind a privileged port to a socket
+.SH SYNOPSIS
+.B #include <privman.h>
+.sp
+.BI "int priv_bind(int " sockfd ", struct sockaddr *" my_addr ", socklen_t " addrlen ");"
+.SH DESCRIPTION
+.B priv_bind
+gives the socket
+.I sockfd
+the local address
+.IR my_addr .
+.IR my_addr " is " addrlen
+bytes long. Traditionally, this is called "assigning a name to a 
+socket."  See
+.BR bind (2)
+for more details, as this method parallels bind(2).
+.SH "RETURN VALUE"
+On success, zero is returned.  On error, -1 is returned and 
+.I errno
+is set appropriately.
+.SH ERRORS
+See
+.BR bind (2)
+for more detail. In addition to the errors listed there,
+.B priv_bind
+may set
+.I errno
+to
+.B EPERM
+if the port is not listed in the application's Privman configuration file.
+
+.SH FILES
+.IR @sysconfdir@/@PACKAGE@.d/ appname
+.RS
+The application's configuration file.  See
+.BR privman_conf (5)
+.RE
+.SH BUGS
+priv_bind only supports IPv4
+.SH AUTHOR
+Douglas Kilpatrick, originally written while at Network Associates.
+Send email to <privman@rapidscaling.com>
+.SH "SEE ALSO"
+.BR priv_daemon (3)
+.BR priv_execve (3)
+.BR priv_fopen (3)
+.BR priv_wait4 (3)
+.BR priv_fork (3)
+.BR priv_init (3)
+.BR privman_conf (5)
+.BR priv_open (3)
+.BR priv_pam (3)
+.BR priv_rerunas (3)
+.BR priv_respawn_as (3)
+.BR privman (7)

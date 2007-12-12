@@ -1,0 +1,75 @@
+Version 0.9.3
+	Changed the implimentation of priv_popen from being based on
+	rerunas to its own primitive to get rid of the use of tempnam.
+
+Version 0.9.2
+	Added some micro benchmarks.
+	msghdr didn't handle EINTR when reading.  Some changes in signal
+	handling mean that it has to, so it does not.
+	Clean up zombies if the first child exists on us after we switch
+	over to the second.  Wrap wait4.
+	Fixed a bug with pamStart if you didn't pass in a user it crashed.
+	Changed priv_popen to a primitive, instead of building it on top
+	of rerunas.  This allowed me to get rid of a call to tempnam.
+
+Version 0.9.1
+	Added a feature to add authenticated users to the runas list.  Add
+	"auth_allow_rerun true" to your config file.
+	Changed check_user to use it.
+	Added code to myecho to test the extension framework, which also
+	makes the test work on Solaris.
+	Fixed CAP extensions.
+	Don't allow "root" to match "*" in runas lists.
+	Fixed test programs to not rely on certain accounts existing.
+	Don't build check_user on Solaris.
+	Fixed some man pages.
+
+Version 0.9.0
+	Added an extension framework, register_foo_fn and invoke_foo_fn
+	where foo is one of "cap" (capability, returns file descriptor) or
+	"info" (returns string)
+
+	Added priv_popen_as(), priv_unlink(), and priv_wait4() methods.
+	Changed how priv_rerunas works slightly.  Since the prototype
+	to priv_rerunas() changed, the major number of the library has
+	been bumped to 1.
+
+	Better support of systems without PAM.  At least it ought to compile
+	now.
+
+Version 0.8.4:
+	Support Solaris 9
+	Add better autoconf tests to give us a shot at supporting other
+	currently-untested platforms.
+
+Version 0.8.3:
+	Support Macintosh OS X
+	Moved more/all debug output to syslog.
+	Added man pages.
+	Fixed a bug where privman.h might include files that didn't exist
+	on the target system.
+	If the "setuid()" call fails in priv_init(), blow up.
+
+Version 0.8.2:
+	Moved some debug output to syslog.
+	Added proper namespaces for C++ classes to fix problems with
+	newer g++ versions.
+	Added priv_pam_fail_delay.
+	Fixed some ordering issues in autogen.sh that let it work with a
+	wider range of auto-tool versions.
+
+Version 0.8.1:
+	Improved some comments.
+	Added config requirement for priv_runas.
+
+Version 0.8:
+	Added support for "priv_rerunas" and "priv_execve".  This should
+	software that needs to do a uid transition at some midpoint and
+	continue.  You'll still have to hack your software some, as
+	priv_rerunas falls out of priv_init a second time, but I found
+	that this functionality handled FTPD.
+
+Version 0.5:
+	Initial release.  Handles file open, bind, and various PAM functions
+	in addition to fork and daemon.  Sufficient to port httpd, but not
+	sufficient for FTPD or other authenticating servers.

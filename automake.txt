@@ -1,0 +1,413 @@
+
+Rational:  Existing docs suck.  Problem: so does this one.  But it should
+at least suck differently.
+
+The GNU autotools are useful for taking away much of the drudery of
+making decent makefiles, and of making portable software.   This
+txt file attempts to describe how to use them together for simple
+projects within their comfort-zone.
+
+This is not documentation for any of the commands.  This attempts to be
+a quick-start guide, or an extended tutorial.  For more extensive help
+you can see the "GNU autoconf, automake, and libtool" book (Gary V.
+Vaughan et. all, New Riders, 2001) or read the online version at 
+http://sources.redhat.com/autobook/autobook/autobook_toc.html.  The info
+pages for the various tools comprise the real documentation, and are not
+unreadable.
+
+
+
+
+Half-steps are for cowards.  From a dead stop, the build process will now
+be:
+
+	aclocal
+	autoheader
+	automake --foreign --add-missing
+	autoconf
+
+	./configure
+	make
+	make install
+
+The assumption is that the first 4 steps will be done rarely.  Software
+will be distributed in a state where they have already been run, and
+only the last three steps will take place frequently.  (In fact, the
+"make dist" target of automake generated makefiles produces a .tar.gz
+file that just needs the last three steps)
+
+
+The source files for this procedure are:
+1) configure.in
+2) various Makefile.am files
+
+While other files might matter, you can ignore them in the simple cases.
+
+aclocal examines your configure.in and decides if you need additional
+automake M4 macros.
+
+autoheader examines your configure.in, and generates a "config.h.in"
+file.  The configure script will edit this file to add generated cpp
+macros based on the results of its tests.
+
+automake examines your configure.in and your Makefile.am, and turns it
+into a fairly full featured (and ludicriously complex) Makefile.in.
+
+autoconf examines the configure.in file and generates a configure shell
+script to run the required tests.  Running that shell script will turn
+turns other "foo.in" files into coorsponding "foo" files by changing
+instances of @BAR@ into the generated content.  "configure" also modifies
+the config.h.in file to set the various cpp macros.
+
+This document will ignore "aclocal" and "autoheader" completely.  In
+addition, the generated Makefile.in files and the later generated
+Makefile files should be considered binary files.  Don't look at them
+to hard, you'll just hurt your eyes.
+
+
+------------------------------------------------------------------------
+Automake:
+
+	Automake makes makefiles.  Automake takes as its input a fairly
+small file that describes the dependencies of the software to be built,
+and generates a Makefile that knows how to build, clean, install, and
+distribute the software.
+
+	Since its easier to show than to tell, I've included, in its
+entirety, is the Makefile.am for the src directory of the privman library.
+
+-------------------------------------------------
+## Process this file with automake to produce Makefile.in
+ 
+# create a deps file.
+YFLAGS = -d
+ 
+# Turn on warnings
+CFLAGS = -W -Wall -O2 -g -DCONFIG_PATH="\"@sysconfdir@/@PACKAGE@.d/\""
+CXXFLAGS = -W -Wall -O2 -g -DCONFIG_PATH="\"@sysconfdir@/@PACKAGE@.d/\""
+ 
+lib_LTLIBRARIES = libprivman.la
+libprivman_la_SOURCES = config_lex.ll config_parse.yy privman.cc msghdr.c
+libprivman_la_LDFLAGS = -export-symbols-regex 'priv_' -version-info 0:0:0
+BUILT_SOURCES = config_lex.cc config_parse.cc config_parse.h
+noinst_HEADERS = types.h config_parse.h
+include_HEADERS = msghdr.h privman.h
+libprivman_la_LIBADD = @LIBS@ -lstdc++
+ 
+# Need to create this depenency to force the definitions file to be built
+config_lex.ll: config_parse.cc
+ 
+CLEANFILES = config_parse.cc config_parse.h config_lex.cc
+MAINTAINERCLEANFILES = Makefile.in
+------------------------------------------------------------
+
+The only reason its so long is I wanted to change some of the default
+compile flags.  When automake is done with this file, the generated
+Makefile knows how to compile C, C++, yacc, and flex files and turn
+them into a single versioned shared library.  The makefile also knows
+how and where to install the library's header files, and the library
+itsself.
+
+Automake generated makefiles also 
+
+	clean: rm *.o, and other equivilents
+	distclean: Also nuke ./configure generated files.
+	maintainer-clean: nuke even more generated files.
+	install: installs
+
+You tell automake what you want to build by telling it where it should
+be installed, what type of object it is, and the name of the built object.
+Automake's normal "var = value" syntax doesn't really allow three bits of
+information to be specified at the same time, so its been hacked on a bit:
+
+<install location>_OBJTYPE = objname
+
+For example:
+
+noinst_PROGRAM = hello
+
+tells automake that you expect to create a program called "hello" that
+will not be installed.  Or
+
+lib_LIBRARIES = libhello.a
+
+means that you expect to install the library "libhello.a" in the 
+directory specified by "$(libdir)" (defaults to /usr/local/lib).
+For shared libraries, you use the "LTLIBRARIES" 'Primitive', and
+the '.la' suffix.  (I know that shared libraries end in .so.  I
+know that LTLIBRARIES != SHLIBRARIES.  Trust in libtool, and all
+will work.  I think.)
+
+lib_LTLIBRARIES = libprivman.la
+
+After you have told automake the name of your object, you then need
+to tell it the sources required to build it.  To set "properties" of
+a target, you define additional variables along the syntax of:
+
+target_PROPERTY = values
+
+Any 'weird' characters of the target need to get turned into '_'
+characters, so "libprivman.la" becomes "libprovman_la", and
+"foo/bar.h" becomes "foo_bar_h"
+
+libprivman_la_SOURCES = config_lex.ll config_parse.yy privman.cc msghdr.c
+
+From this line, automake figures out that it needs to turn those four files
+into binary objects, and collect them together to create the libprivman.la
+shared library.  The other 2 source lines above mention other source
+files that will need to be included with any distribution of the
+software, but may or may not need to be installed at installation time.
+
+noinst_HEADERS = types.y config_parse.h
+include_HEADERS = msghdr.h privman.h
+
+The second of those two lines specifies a new couple of targets.
+Unlike libraries, header files do not typically need to be created,
+so things are a bit less crucial.  The first line specifies two
+targets that will not be installed.  The second specifies two that
+will be installed in $(incdir) (defaults to /usr/local/include).
+If I were being properly type-A about these things, I might have
+added another line like
+
+config_parse_h_SOURCES = config_parse.yy
+
+to tell automake the source for config_parse.h, but I don't know if
+the default YACC rules would have handled that properly.
+
+
+The other lines are generally replacement settings for variables used
+by automake/autoconf default makefiles.  CFLAGS is used in the rule
+for turning .c files into .o files, obviously enough.  YFLAGS are
+passed to yacc.  I need the '-d' flag to generate the token definition
+file, so I've added that here.
+
+MAINTAINERCLEANFILES = Makefile.in
+
+For some reason, automake doesn't think that the generated files should
+clean up automake generated objects on "maintainer-clean".  I do.  So
+I added the generated Makefile.in file to the list of files to be
+cleaned during the maintainer-clean target.  I found most of these
+variables by looking at the generated Makefile.in and looking for
+variables in about the right place.
+
+# Need to create this depenency to force the definitions file to be built
+config_lex.ll: config_parse.cc
+
+Feel free to drop traditional make rules into the Makefile.am file. They
+will get put, unmodified, into the Makefile.in file, which will later
+become the Makefile.  In this case, I needed to tell make to make
+config_parse.cc before making config_lex.ll, as config_lex.ll includes
+the yacc-generated token definitions include file.  Since the makefile
+does not know about token-definition include files, I added a rule to
+force the generation of the matching config_parse.cc file before
+the .ll file.
+
+Note on Yacc and Lex:
+	Automake's support for yacc and lex is a bit annoying.  It assumes
+the stupidiest yacc around (for compatability), so it can't really know
+to turn a given .y file into a .cc file except by extension.  So, if your
+code in a yacc file is C++. you name your .y file "foo.yy", or "foo.ypp"
+or "foo.yxx", and the generated C++ file will be named "foo.cc" or
+"foo.cpp" or "foo.cxx"
+
+You may notice a couple of "@FOO@" bits in the Makefile.am.  These
+are for the configure script later to change.  LIBS is the list of
+libraries configure determined I needed, @PACKAGE@ is the name of
+the package, etc.
+
+A simplier Makefile.am might be the one at the base directory of the
+privman package:
+
+--
+SUBDIRS = config src tests etc
+MAINTAINERCLEANFILES = configure Makefile.in stamp-h.in aclocal.m4 config.h.in 
+--
+
+Yep, that was it.  Should be simple to figure out.
+
+
+------------------------------------------------------------
+Autoconf
+
+Autoconf requires a "configure.in" file.  The file contains a number
+of M4 autoconf macros that get expanded into portable shell tests for
+various features.  You can, if you want, interspece your own shell
+tests..
+
+Autoconf generates a configure script.  That script will, when run,
+test for various system features.  The script then edits files,
+usually makefiles, and replaces @FOO@ tokens with the determined
+values, and edits a config.h file to add in determined cpp macros.
+You write your Makefiles to use this information, and write your
+source files to test for the various macros.  The automake generated
+Makefiles automatically integrate with autoconf, simplifying the
+process.
+
+You start the configure.in file with
+
+AC_INIT(src/foo.c)
+
+The comment in the generated configure script about this is more
+informative than any other documentation I've found:
+
+# A filename unique to this package, relative to the directory that
+# configure is in, which we can look for to find out if srcdir is correct.
+ac_unique_file=src/msghdr.c
+
+If you want to drop most of the generated files into a different directory,
+you add
+
+AC_CONFIG_AUX_DIR(dir)
+
+If you are using Automake, you also add
+
+AM_INIT_AUTOMAKE(package, 0.5)
+
+After that start, you add checks for features.  Most of the checks will
+define a C preprocessor definition if the test passes.  These definitions
+will either go into the config.h file generated by autoheader, or you
+can define use the @DEFS@ somewhere in your Makefile.in (or add
+
+DEFS = @DEFS@
+
+to your Makefile.am.  Automake makefiles use DEFS in the various build
+rules)
+
+The checks are supposed to be in a certain order: programs, libraries
+header files, types, specific functions.
+
+Programs:
+
+AC_PROG_CC
+AC_PROG_CXX
+AC_PROG_YACC
+
+These macros will search for and find a program of the appropriate type.
+For exampl,e AC_PROG_YACC looks for bison (GNU's yacc clone), and if it
+can not find that it will look for yacc.  To use the yacc that it finds,
+you put something like:
+
+YACC = @YACC@
+
+in your makefile (again, automake does this automatically), and when
+configure rewrites your makefile it will fill in the variable.
+
+So, for the automake/autoconf combination, you just add in the programs
+that you need to build your software.
+
+Libraries:
+
+There are two macros you will normally use to look for libraries,
+AC_CHECK_LIB and AC_SEARCH_LIBS.  The first checks that a specific
+library is there.  The second finds out which library in the list
+defines a specific symbol.
+
+Again, from the privman project:
+
+AC_SEARCH_LIBS(dlopen, c dl)
+AC_CHECK_LIB(pam, pam_start)
+AC_SEARCH_LIBS(misc_conv, pam pam_misc, , , -lpam)
+
+The first looks for dlopen in either libc or libdl.  The second makes
+sure that libpam is on the sysem and contains the symbol pam_start.
+(we don't really care about pam_start specifically, but the test requires
+a symbol known to be in the library.  The test creates a dummy c file
+and tries to link against the library, if linking fails, the library is
+not there.)  The third test is like the first, except that I know that
+the libpam_misc library will need the libpam library for a successful
+link.  So I added the option to tell configure to always add -lpam
+to the link line.
+
+
+Header files:
+
+AC_HEADER_STDC
+AC_HEADER_SYS_WAIT
+AC_CHECK_HEADERS(assert.h errno.h fcntl.h .... )
+
+These macros define "HAVE_FOO_H" cpp macros if they are successfull.  (for
+example, if sys/wait.h is found, HAVE_SYS_WAIT_H will be defined)  You
+should then only include the header if it exists.
+
+Types:
+
+AC_C_CONST
+AC_TYPE_PID_T
+AC_SIZE_T
+
+These macros define various cpp macros to allow you to use the type or
+type qualifiers tested even if the platform does not define them.  For
+example, the AC_C_CONST macro will define "const" to be nothing if the
+platform does not support the const keyword. (platform broken, find
+another)
+
+
+Library Functions:
+
+AC_CHECK_FUNCS(getcwd strdup socket ...)
+
+This macro checks to see if the specified functions are exist in libc.
+If the function "foo" exists, the cpp macro "HAVE_FOO" is defined.
+You are expected to test for this macro, and if not set, conditionally
+compile in replacement versions of these functions.
+
+Automake provides some additional support for this problem.  To use
+the automake support, change the AC_CHECK_FUNCS macro to the 
+AC_REPLACE_FUNCS macro (same arguments).  This REPLACE_FUNCS macro
+adds the missing methods to the @LIBOBJS@ variable in the form of
+object files.  You can then simply create a single C source file
+per method and add @LIBOBJS@ to the correct place in your Makefile.am.
+(commonly, you might create a small library for these methods)
+
+
+Output:
+
+Finally, you tell configure which files it needs to edit.  The two macros
+of note are
+
+AC_CONFIG_HEADER(config.h)
+
+and
+
+AC_OUTPUT(Makefile src/Makefile tests/Makefile ...)
+
+If you are using automake, use the AM_CONFIG_HEADER() macro instead of the
+AC_CONFIG_HEADER() macro.
+
+The CONFIG_HEADER macro causes the generated configure script to edit
+the configuration file specified, adding in the defines created by all
+the macros above.  Your code should then include this file (its location
+will be added to the -I header file search list) and use the cpp macros
+provided.
+
+The AC_OUTPUT() macro edits the makefiles and other files, replacing
+@FOO@ with the contents of the FOO variable.  For example, any
+@YACC@ token will be replaced by the name of the yacc program found by
+AC_PROG_YACC.
+
+
+Library Versioning:
+
+libtool uses the "-version-info" argument to version libraries, but the
+relationship between the arguments and the produced version isn't obvious.
+
+libprivman_la_LDFLAGS = -export-symbols-regex 'priv_' -version-info 3:0:3
+
+The first number is the version of the interface.  The last number is
+the number of interfaces supported.  These two numbers combine to determine
+the major number of the library.  In my example, I support all the
+interfaces to date, so the major number is 0.  If I introduce an
+incompatability I might use 4:0:3.  4-3 is 1, so the major version of that
+library is 1.  The smaller of the two numbers determines the minor version
+of the library, in this case "3".  The middle number of the three determins
+the revision of the library.  So 4:0:3 produces libfoo.so.1.3.0.
+
+The lesson here is that if you care about the library version (you want
+the library version to match the package version) then you manually futz
+with -version-info to get the version you want.
+
+If you don't care about versions of the package and the library matching,
+then up the revision on mere bug-fixes.  Up the interface number and age
+when you introduce binary compatiable changes, and just the interface
+number when you introduce incompatable (major) changes.  In either case,
+if the interface changes, reset the revision number.

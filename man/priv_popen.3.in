@@ -1,0 +1,99 @@
+.\"
+.\" Copyright © 2002  Networks Associates Technology, Inc.
+.\" Copyright © 2007  Douglas Kilpatrick
+.\" Licensed two-clause BSD
+.\"
+.\" Process this file with
+.\" groff -man -Tascii $Name:  $
+.\"
+.\" $Id: priv_popen.3.in,v 1.1 2002/10/28 21:57:01 dougk Exp $
+.\"
+.TH PRIV_POPEN 3 "DECEMBER 2007" Unix "Subroutines"
+.SH NAME
+priv_popen, priv_pclose - process IO
+.SH SYNOPSIS
+.B #include <privman.h>
+.sp
+.BI "FILE *priv_popen(const char *" command ", const char * " type ", const char *" user ",);"
+.BI "int   priv_pclose(FILE *" stream ");"
+.SH DESCRIPTION
+The 
+.B
+priv_popen()
+function opens a process by creating a pipe, forking, and invoking the shell.
+The 
+.I type
+argument may specify only reading or writing, not both.  The resulting stream
+is correspondingly read-only or write-only.
+
+The 
+.I command
+argument is a pointer to a null-terminated string containing a shell command
+line.  The command is bassed to 
+.I /bin/sh
+using the -c flag; interpretation, if any, is performed by the shell.  The 
+.I mode
+argument is a pointer to a null-terminated string which must be either
+`r' for reading or `w' for writing.
+
+See the man page for
+.BR popen(3)
+for more details, as this method parallels popen(3).
+
+The 
+.B priv_pclose
+function waits for the associated process to terminate, and returns
+the exit status of the command as returned by 
+.B wait4.
+
+.SH "RETURN VALUE"
+On success, a pointer to a valid stream is returned.  On error, NULL is
+returned and 
+.I errno
+is set appropriately.
+
+The 
+.B priv_pclose
+function returns -1 if
+.B wait4
+returns an error, or some other error is detected.
+.SH ERRORS
+See
+.BR popen (3) 
+and
+.BR pclose (3) 
+for more detail. In addition to the errors listed there,
+.B priv_popen
+may set
+.I errno
+to
+.B EPERM
+if the user is not listed in an ``run_as'' configuration directive, or if
+the ``allow_as'' configuration primitive is not set to true.  See
+.BR privman_conf (5)
+for more details.
+
+.SH FILES
+.IR @sysconfdir@/@PACKAGE@.d/ appname
+.RS
+The application's configuration file.  See
+.BR privman_conf (5)
+.RE
+.SH BUGS
+The file must
+.SH AUTHOR
+Douglas Kilpatrick, originally written while at Network Associates.
+Send email to <privman@rapidscaling.com>
+.SH "SEE ALSO"
+.BR priv_daemon (3)
+.BR priv_execve (3)
+.BR priv_fopen (3)
+.BR priv_fork (3)
+.BR priv_wait4 (3)
+.BR priv_init (3)
+.BR privman_conf (5)
+.BR priv_open (3)
+.BR priv_pam (3)
+.BR priv_rerunas (3)
+.BR priv_respawn_as (3)
+.BR privman (7)

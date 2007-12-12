@@ -1,0 +1,58 @@
+.\" Copyright © 2002  Networks Associates Technology, Inc.
+.\" Copyright © 2007  Douglas Kilpatrick
+.\" Licensed two-clause BSD
+.\"
+.\" Process this file with
+.\" groff -man -Tascii $Name:  $
+.\"
+.\" $Id: priv_fopen.3.in,v 1.4 2002/09/19 20:05:05 dougk Exp $
+.\"
+.TH PRIV_FOPEN 3 "DECEMBER 2007" Unix "Subroutines"
+.SH NAME
+priv_fopen - stream open functions for privileged files
+.SH SYNOPSIS
+.B #include <privman.h>
+.sp
+.BI "int priv_fopen(const char *" path ", const char *" mode ");"
+.SH DESCRIPTION
+.B priv_fopen
+opens the file whose name is the string pointed to by 
+.I path
+and associates a stream with it.  The stream can then be used by 
+.BR fread ", " fwrite ", and other such function calls."
+.B priv_fopen
+takes the same mode strings as fopen(3).
+
+.B priv_fopen
+will only succeed if the configuration file for the application allows the
+access.
+.SH "RETURN VALUE"
+.B priv_fopen
+returns the new file stream, or NULL if an error occurred (in which case,
+.I errno
+is set appropriately).  See
+.BR fopen (3)
+for more details, as this method parallels it.
+.SH FILES
+.IR @sysconfdir@/@PACKAGE@.d/ appname
+.RS
+The application's configuration file.  See
+.BR privman_conf (5)
+for more details.
+.RE
+.SH BUGS
+File creation may be possible without granting RW or AO access to the file.
+.SH AUTHOR
+Douglas Kilpatrick, originally written while at Network Associates.
+Send email to <privman@rapidscaling.com>
+.SH "SEE ALSO"
+.BR priv_bind (3)
+.BR priv_daemon (3)
+.BR priv_execve (3)
+.BR priv_open (3)
+.BR priv_fork (3)
+.BR priv_init (3)
+.BR privman_conf (5)
+.BR priv_pam (3)
+.BR priv_rerunas (3)
+.BR privman (7)

@@ -1,0 +1,88 @@
+.\"
+.\" Copyright © 2002  Networks Associates Technology, Inc.
+.\" Copyright © 2007  Douglas Kilpatrick
+.\" Licensed two-clause BSD
+.\"
+.\" Process this file with
+.\" groff -man -Tascii $Name:  $
+.\"
+.\" $Id: priv_custom.3.in,v 1.2 2002/11/04 15:16:49 dougk Exp $
+.\"
+.TH PRIV_CUSTOM 3 "DECEMBER 2007" Unix "Subroutines"
+.SH NAME
+priv_register_{info,cap}_fn, priv_invoke_{info,cap}_fn - register and invoke
+custom privileged methods.
+.SH SYNOPSIS
+.B #include <privman.h>
+.sp
+.BI "int priv_register_info_fn(char *(*" fnptr ")(char * const *));"
+.br
+.BI "int priv_register_cap_fn(int    (*" fnptr ")(char * const *));"
+.br
+.BI "char *priv_invoke_info_fn(int " handle ", char * const " args "[]);"
+.br
+.BI "int priv_invoke_cap_fn(int " handle ", char * const " args "[]);"
+.SH DESCRIPTION
+These methods allow you to register functions to be executed inside the
+Privman server.  The info functions return a string, the capability functions
+return a file descriptor.
+
+The register functions only work before
+.BR priv_init (3)
+is invoked.  They return an integer
+.I handle
+to identify the registered function.  The handle is then passed into
+the invoke functions after
+.BR priv_init (3)
+s invoked to cause the registered function to be invoked inside the
+context of the Privman server.
+
+.SH "RETURN VALUE"
+On success, a 
+.I handle
+is returned.  On error, -1 is returned and 
+.I errno
+is set appropriately.
+.SH ERRORS
+If one of the register functions is called after
+.BR priv_init (3)
+is invoked, 
+.I errno
+will be
+.B EPERM.
+
+If an invalid handle is passed to either of the invoke functions, either
+-1 or NULL will be returned, and
+.I errno will be set to
+.B ENOENT.
+
+If the registered function returns -1 or NULL,
+.I errno
+will be set to the value of errno after the registered function was executed.
+
+.SH BUGS
+There is currently no configuration option to allow setting custom methods.
+While the
+.BR fork (2) 
+that happens in
+.BR priv_init (3)
+will protect the Privman servers function map from modification, any poorly
+written methods can trash the servers state.  Write your custom methods
+carefully.
+
+.SH AUTHOR
+Douglas Kilpatrick, originally written while at Network Associates.
+Send email to <privman@rapidscaling.com>
+.SH "SEE ALSO"
+.BR priv_daemon (3)
+.BR priv_execve (3)
+.BR priv_fopen (3)
+.BR priv_fork (3)
+.BR priv_wait4 (3)
+.BR priv_init (3)
+.BR privman_conf (5)
+.BR priv_open (3)
+.BR priv_pam (3)
+.BR priv_rerunas (3)
+.BR priv_rerespawn_as (3)
+.BR privman (7)
