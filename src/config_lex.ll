@@ -1,6 +1,6 @@
 %{
 /* 
- * Copyright © 2002  Networks Associates Technology, Inc.
+ * Copyright Â© 2002  Networks Associates Technology, Inc.
  * All rights reserved.
  *
  * $Id: config_lex.ll,v 1.11 2002/11/12 04:43:50 dougk Exp $
@@ -112,5 +112,4 @@ void yyerror(const char *msg)
     syslog(LOG_ERR, "%s%s",lastline, thisline);
     syslog(LOG_ERR, "\n%*s\n%s at line %d\n", column, "^", msg, lineno);
 }
-
 
